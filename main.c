@@ -2,6 +2,7 @@
 //  150353265326
 //  22055653351
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -15,8 +16,14 @@
 char * multiply(
   size_t product_sz,
   char * product,
-  char const * multiplicand,
-  char const * multiplier);
+  char * multiplicand,
+  char * multiplier);
+
+typedef struct aupair aupair;
+struct aupair {
+  char first[LEN_I + 1];
+  char second[LEN_I + 1];
+};
 
 /*
  *  MARK:  show_n_tell()
@@ -35,6 +42,7 @@ void show_n_tell(char const product[], char const multiplicand[], char const mul
  *  MARK: main()
  */
 int main(int argc, char const * argv[]) {
+#ifdef RUN_MAIN
   uint8_t a[LEN_I] = { 0, }, b[LEN_I] = { 0, };
   uint8_t ans[LEN_O] = { 0, };
   // int i, j, tmp;
@@ -42,8 +50,17 @@ int main(int argc, char const * argv[]) {
   char p1[LEN_O + 1] = { '\0', };
   char * p1p = NULL;
 
-  scanf(" %s", s1);
-  scanf(" %s", s2);
+  int scrc = 0;
+  scrc = scanf(" %s", s1);
+  if (scrc <= 0) {
+    printf("GRONK! scanf() failed.");
+    exit(EXIT_FAILURE);
+  }
+  scrc = scanf(" %s", s2);
+  if (scrc <= 0) {
+    printf("GRONK! scanf() failed.");
+    exit(EXIT_FAILURE);
+  }
 
   printf("%d\n", 10 * 5);
   printf("%d\n", 10 * -5);
@@ -108,16 +125,39 @@ int main(int argc, char const * argv[]) {
   sprintf(mult, "%llu", ULLONG_MAX);
   p1p = multiply(LEN_I + 1, p1, mult, mult);
   show_n_tell(p1p, mult, mult);
+#endif /* RUN_MAIN */
 
-  char mpnd[LEN_I + 1] = { '\0', };
-  char mpyr[LEN_I + 1] = { '\0', };
-  memset(p1, '\0', LEN_O + 1);
-  sprintf(mpnd, "%d", 10);
-  sprintf(mpyr, "%d", -1);
-  p1p = multiply(LEN_I + 1, p1, mpnd, mpyr);
-  show_n_tell(p1p, mpnd, mpyr);
+  aupair samples[] = {
+    { "", "" },
+    { "150353265326", "22055653351" },
+    {   "100",   "100" },
+    {   "100",  "-100" },
+    {  "-100",   "100" },
+    {  "-100",  "-100" },
+    {  "0100",  "0100" },
+    { "-0100",  "0100" },
+    {  "0100", "-0100" },
+    { "-0100", "-0100" },
+};
+  size_t samples_sz = sizeof samples / sizeof *samples;
 
-  return 0;
+  sprintf(samples[0].first, "%llu", ULLONG_MAX);
+  sprintf(samples[0].second, "%llu", ULLONG_MAX);
+
+  for (size_t s_ = 0ul; s_ < samples_sz; ++s_) {
+    putchar('\n');
+    char product[LEN_O + 1] = { '\0', };
+    char * product_p = NULL;
+    product_p = multiply(LEN_O + 1, product,
+                         samples[s_].first,
+                         samples[s_].second);
+    show_n_tell(product_p,
+                samples[s_].first,
+                samples[s_].second);
+  }
+  putchar('\n');
+
+  return EXIT_SUCCESS;
 }
 
 /*
@@ -126,11 +166,24 @@ int main(int argc, char const * argv[]) {
 char * multiply(
   size_t product_sz,
   char * product,
-  char const * multiplicand,
-  char const * multiplier) {
+  char * multiplicand,
+  char * multiplier) {
 
   size_t multiplicand_sz = strlen(multiplicand);
   size_t multiplier_sz   = strlen(multiplier);
+
+  int_fast8_t mdsign = 1;
+  int_fast8_t mrsign = 1;
+  int_fast8_t sign = 1; 
+  if (multiplicand[0] == '-') {
+    mdsign = -1;
+    multiplicand[0] = '0';
+  }
+  if (multiplier[0] == '-') {
+    mrsign = -1;
+    multiplier[0] = '0';
+  }
+  sign = mdsign * mrsign;
 
   uint8_t multiplicand_digit[LEN_I] = { 0, };
   uint8_t multiplier_digit[LEN_I] = { 0, };
@@ -201,6 +254,25 @@ char * multiply(
     printf("%2zu %2zu %c\n", i, p, product_digit[i] + '0');
 #endif
   }
+
+  if (mdsign == -1) {
+    multiplicand[0] = '-';
+  }
+  if (mrsign == -1) {
+    multiplier[0] = '-';
+  }
+  if (sign == -1) {
+    product[0] = '-';
+  }
+
+  size_t zeros = 0ul;
+  for (size_t z_ = 0ul; z_ < product_sz; ++z_) {
+    if (product[z_] != '0') {
+      break;
+    }
+    zeros++;
+  }
+  memmove(product, product + zeros, product_sz - zeros);
 
   return product;
 }
