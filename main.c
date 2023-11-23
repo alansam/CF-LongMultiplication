@@ -7,6 +7,10 @@
 #include <string.h>
 #include <stdint.h>
 #include <limits.h>
+#ifdef GMP_SUPPORT
+#include <stdarg.h>
+#include <gmp.h>
+#endif /* GMP_SUPPORT */
 
 #define NDEBUG 1
 
@@ -24,6 +28,14 @@ char * multiply_impl(
   char * product,
   char const * multiplicand,
   char const * multiplier);
+
+#ifdef GMP_SUPPORT
+char * multiply_gmp(
+  size_t product_sz,
+  char * product,
+  char const * multiplicand,
+  char const * multiplier);
+#endif /* GMP_SUPPORT */
 
 typedef struct aupair aupair;
 struct aupair {
@@ -122,6 +134,16 @@ int main(int argc, char const * argv[]) {
     show_n_tell(product_p,
                 samples[s_].first,
                 samples[s_].second);
+
+#ifdef GMP_SUPPORT
+    memset(product, '\0', LEN_O + 1);
+    product_p = multiply_gmp(LEN_O + 1, product,
+                             samples[s_].first,
+                             samples[s_].second);
+    show_n_tell(product_p,
+                samples[s_].first,
+                samples[s_].second);
+#endif /* GMP_SUPPORT */
   }
   putchar('\n');
 
@@ -364,7 +386,7 @@ char * multiply_impl(
   putchar('\n');
 #endif
 
-  for (ssize_t i = multiplicand_sz -1 + multiplier_sz - 1, p = 0; i >= 0; i--, p++) {
+  for (ssize_t i = last /*multiplicand_sz - 1 + multiplier_sz - 1*/, p = 0; i >= 0; i--, p++) {
     product[p] = product_digit[i] + '0';
 #ifndef NDEBUG
     printf("%s %s %d :", __FILE__, __func__, __LINE__ + 1);
@@ -374,6 +396,11 @@ char * multiply_impl(
 
   size_t product_len = strlen(product);
 
+  //  make an empty product = zero
+  if (product_len == 0) {
+    product[0] = '0';
+    product_len = 1;
+  }
 
   #ifndef NDEBUG
     // printf("} zeros, sp: %zu %zu\n", zeros, sp);
@@ -400,3 +427,31 @@ char * multiply_impl(
 
   return product;
 }
+
+#ifdef GMP_SUPPORT
+/*
+ *  MARK: multiply_gmp()
+ */
+char * multiply_gmp(
+  size_t product_sz,
+  char * product,
+  char const * multiplicand,
+  char const * multiplier) {
+
+  mpz_t product_bd;
+  mpz_t multiplicand_bd;
+  mpz_t multiplier_bd;
+  mpz_inits(product_bd, multiplicand_bd, multiplier_bd, NULL);
+
+  mpz_set_str(multiplicand_bd, multiplicand, 10);
+  mpz_set_str(multiplier_bd,multiplier, 10);
+
+  mpz_mul(product_bd, multiplicand_bd, multiplier_bd);
+
+  mpz_get_str(product, 10, product_bd);
+
+  mpz_clears(product_bd, multiplicand_bd, multiplier_bd, NULL);
+
+  return product;
+}
+#endif /* GMP_SUPPORT */
