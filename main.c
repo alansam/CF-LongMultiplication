@@ -80,91 +80,8 @@ int_fast8_t get_sign(char * numstr) {
  *  MARK: main()
  */
 int main(int argc, char const * argv[]) {
-#ifdef RUN_MAIN
-  uint8_t a[LEN_I] = { 0, }, b[LEN_I] = { 0, };
-  uint8_t ans[LEN_O] = { 0, };
-  // int i, j, tmp;
-  char s1[LEN_I + 1] = { '\0', }, s2[LEN_I + 1] = { '\0', };
-  char p1[LEN_O + 1] = { '\0', };
-  char * p1p = NULL;
 
-  int scrc = 0;
-  scrc = scanf(" %s", s1);
-  if (scrc <= 0) {
-    printf("GRONK! scanf() failed.");
-    exit(EXIT_FAILURE);
-  }
-  scrc = scanf(" %s", s2);
-  if (scrc <= 0) {
-    printf("GRONK! scanf() failed.");
-    exit(EXIT_FAILURE);
-  }
-
-  printf("%d\n", 10 * 5);
-  printf("%d\n", 10 * -5);
-  printf("%d\n", -10 * 5);
-  printf("%d\n", -10 * -5);
-
-  size_t l1 = strlen(s1);
-  size_t l2 = strlen(s2);
-
-  for (ssize_t i = l1 - 1, j = 0; i >= 0; i--, j++) {
-    a[j] = s1[i] - '0';
-#ifndef NDEBUG
-    printf("%2zu %3hhu %04hhx %04hhx\n", j, a[j], (uint8_t) a[j], a[j] + '0');
-#endif
-  }
-  putchar('\n');
-
-  for (ssize_t i = l2 - 1, j = 0; i >= 0; i--, j++) {
-    b[j] = s2[i] - '0';
-#ifndef NDEBUG
-    printf("%2zu %3hhu %04hhx %04hhx\n", j, b[j], (uint8_t) b[j], b[j] + '0');
-#endif
-  }
-  putchar('\n');
-
-  for (size_t i = 0; i < l2; i++) {
-    for (size_t j = 0; j < l1; j++) {
-      ans[i + j] += b[i] * a[j];
-    }
-  }
-
-  for (size_t i = 0; i < l1 + l2; i++) {
-    uint8_t tmp = ans[i] / 10;
-    ans[i] = ans[i] % 10;
-    ans[i + 1] = ans[i + 1] + tmp;
-  }
-
-  size_t last = l1 + l2;
-  for (ssize_t i = l1 + l2; i >= 0; i--) {
-    if (ans[i] > 0) {
-      break;
-    }
-    last--;
-  }
-
-  printf("Product      : %3zu : ", last + 1ul);
-  for (ssize_t i = last; i >= 0; i--) {
-    printf("%hhu", ans[i]);
-  }
-  putchar('\n');
-#ifndef NDEBUG
-  for (size_t p = 0, ct = 1, lc = 10; p <= last; ++p) {
-    printf("%3hhu%s", ans[p], (ct++ % lc == 0 ? "\n" : ""));
-  }
-  putchar('\n');
-#endif
-
-  p1p = multiply(LEN_O + 1, p1, s1, s2);
-  show_n_tell(p1, s1, s2);
-
-  char mult[LEN_I + 1] = { '\0', };
-  sprintf(mult, "%llu", ULLONG_MAX);
-  p1p = multiply(LEN_I + 1, p1, mult, mult);
-  show_n_tell(p1p, mult, mult);
-#endif /* RUN_MAIN */
-
+  //  sample data
   aupair samples[] = {
     { "", "" },  //  space for ULLONG_MAX
     { "", "" },  //  space for LLONG_MIN, LLONG_MAX
@@ -455,14 +372,8 @@ char * multiply_impl(
 #endif
   }
 
-  //  reset sign in multiplicand & multiplier
-  // if (mdsign == -1) { multiplicand[0] = '-'; }
-  // if (mrsign == -1) { multiplier[0] = '-'; }
-
   size_t product_len = strlen(product);
 
-  //  count leading zeros in product
-//   size_t zeros = count_zeros(product_len, product);
 
   #ifndef NDEBUG
     // printf("} zeros, sp: %zu %zu\n", zeros, sp);
@@ -473,24 +384,16 @@ char * multiply_impl(
   //  set sign in product
   size_t sp = 0ul;
   if (sign == -1) {
-    // if (zeros == 0) {
-      //  add space for -ve sign
-      memmove(product + 1ul, product, product_len);
-      product_len++;
-    // }
+    memmove(product + 1ul, product, product_len);
+    product_len++;
     product[0] = '-';
     sp++;
-    // zeros = zeros > 0 ? zeros - 1ul : 0ul;
   }
 
 #ifndef NDEBUG
-  // printf("} zeros, sp: %zu %zu\n", zeros, sp);
   printf("%s %s %d :", __FILE__, __func__, __LINE__ + 1);
   printf("} product: %zu %s\n", product_len, product);
 #endif
-
-  //  remove leading zeros
-  // memmove(product + sp, product + zeros + sp, product_len - zeros - sp);
 
   free(multiplicand);
   free(multiplier);
